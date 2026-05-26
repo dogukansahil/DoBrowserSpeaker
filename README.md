@@ -8,7 +8,10 @@ Requires Windows 10+ and Python 3.10+ to build. End users do not need Python —
 
 The PC captures its own audio output via WASAPI loopback and streams raw PCM over a local WebSocket. Clients open `http://<your-pc-ip>:8765` in any browser and play it back through Web Audio API.
 
-![BrowserSpeaker](docs/screenshot.png)
+<div style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
+  <img src="docs/screenshot1.png" alt="BrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
+  <img src="docs/screenshot2.png" alt="BrowserSpeaker Mobile UI" style="height: 400px; width: auto; object-fit: contain;">
+</div>
 ## Features
 
 - 48 kHz stereo Float32 PCM streaming, ~80 ms end-to-end buffer
