@@ -59,7 +59,7 @@ This software is provided **as is**, without warranty of any kind, express or im
 
 ## License
 
-Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE) for third-party attributions.
+Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE.md) for third-party attributions.
 
 ---
 
