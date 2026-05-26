@@ -668,7 +668,7 @@ def run_gui(bc: AudioBroadcaster):
     footer.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/dogukansahil/"))
     footer.bind("<Enter>", lambda e: footer.configure(fg=ACCENT))
     footer.bind("<Leave>", lambda e: footer.configure(fg=MUTED))
-    tk.Label(footer_row, text="v0.1", fg=MUTED, bg=BG,
+    tk.Label(footer_row, text="v0.2", fg=MUTED, bg=BG,
              font=("Segoe UI", 8)).pack(side="left", padx=(8, 0))
 
     prev_clients = [0]
