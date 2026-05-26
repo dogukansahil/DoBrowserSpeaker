@@ -13,9 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-================================================================================
-THIRD-PARTY COMPONENTS
-================================================================================
+## THIRD-PARTY COMPONENTS
+
 
 The built binary (BrowserSpeaker.exe) statically bundles the following
 third-party components. Each component is distributed under its own license,
@@ -206,6 +205,4 @@ License:   GPLv2-or-later with a runtime exception for bundled binaries.
         and to distribute those combinations without any restriction coming
         from the use of those files.
 
-================================================================================
-END OF NOTICE
-================================================================================
+.
