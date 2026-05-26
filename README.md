@@ -12,6 +12,7 @@ The PC captures its own audio output via WASAPI loopback and streams raw PCM ove
   <img src="docs/screenshot1.png" alt="BrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
   <img src="docs/screenshot2.png" alt="BrowserSpeaker Mobile UI" style="height: 400px; width: auto; object-fit: contain;">
 </div>
+
 ## Features
 
 - 48 kHz stereo Float32 PCM streaming, ~80 ms end-to-end buffer
