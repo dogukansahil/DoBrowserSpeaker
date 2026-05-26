@@ -66,6 +66,7 @@ def run_pyinstaller() -> None:
         "--onefile",
         "--windowed",
         "--name", "BrowserSpeaker",
+        "--icon", str(HERE / "static" / "icon.ico"),
         "--add-data", f"{HERE / 'static'}{';'}static",
         "--collect-all", "pyaudiowpatch",
         "--hidden-import", "PIL._tkinter_finder",

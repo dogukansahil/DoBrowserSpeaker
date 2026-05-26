@@ -485,6 +485,10 @@ def run_gui(bc: AudioBroadcaster):
     root.geometry("380x600")
     root.resizable(False, False)
     _apply_app_id(root)
+    try:
+        root.iconbitmap(default=str(STATIC / "icon.ico"))
+    except Exception:
+        pass
     root.after(0, lambda: _disable_maximize(root))
 
     # ---- Light palette ----
@@ -493,10 +497,10 @@ def run_gui(bc: AudioBroadcaster):
     BORDER = "#e2e8f0"
     FG = "#0f172a"
     MUTED = "#64748b"
-    ACCENT = "#16a34a"        # green-600
-    ACCENT_HOVER = "#15803d"
-    BTN_PRIMARY = "#2563eb"   # blue-600
-    BTN_PRIMARY_HOVER = "#1d4ed8"
+    ACCENT = "#1050AD"        # brand
+    ACCENT_HOVER = "#0c3f87"
+    BTN_PRIMARY = "#1050AD"
+    BTN_PRIMARY_HOVER = "#0c3f87"
 
     root.configure(bg=BG)
 
