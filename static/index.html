@@ -1,0 +1,277 @@
+<!doctype html>
+<!--
+  Copyright 2026 Dogukan Sahil
+  Licensed under the Apache License, Version 2.0.
+  See LICENSE file in the project root, or http://www.apache.org/licenses/LICENSE-2.0
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>BrowserSpeaker</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #0a0a0a; color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none; user-select: none; -webkit-user-select: none;
+  }
+  body {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px; text-align: center; gap: 24px;
+  }
+  h1 { margin: 0; font-size: 32px; font-weight: 700; color: #4ade80; letter-spacing: -0.02em; }
+  p  { margin: 0; color: #a3a3a3; font-size: 15px; line-height: 1.5; max-width: 320px; }
+  button#btn {
+    width: 200px; height: 200px; border-radius: 50%; border: 0;
+    background: #4ade80; color: #052e16;
+    font-size: 22px; font-weight: 700;
+    cursor: pointer; transition: transform .1s, background .2s;
+    box-shadow: 0 0 60px rgba(74, 222, 128, .25);
+  }
+  button#btn:active { transform: scale(0.96); }
+  button#btn.playing { background: #ef4444; color: #fff; box-shadow: 0 0 60px rgba(239, 68, 68, .35); }
+  button#btn:disabled { background: #444; color: #888; cursor: not-allowed; box-shadow: none; }
+  #status {
+    font-size: 13px; color: #737373; min-height: 1.4em;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .info { font-size: 12px; color: #525252; }
+  footer {
+    position: fixed; bottom: 14px; left: 0; right: 0;
+    text-align: center; font-size: 12px; color: #525252;
+  }
+  footer a { color: #a3a3a3; text-decoration: none; }
+  footer a:hover { color: #4ade80; }
+</style>
+</head>
+<body>
+  <h1>BrowserSpeaker</h1>
+  <p>Press Start to play PC audio on this device.</p>
+  <button id="btn">Start</button>
+  <div id="status">Ready</div>
+  <div class="info" id="info"></div>
+  <footer>
+    <a href="https://github.com/dogukansahil/" target="_blank" rel="noopener">github.com/dogukansahil</a>
+    <span style="margin-left:8px; opacity:.6;">v0.1</span>
+  </footer>
+
+<script>
+const btn = document.getElementById('btn');
+const status = document.getElementById('status');
+const info = document.getElementById('info');
+
+let ws = null;
+let ctx = null;
+let nextTime = 0;
+let cfg = null;
+let playing = false;
+let statsTimer = null;
+let chunksReceived = 0;
+let smoothedRate = 1.0;
+let wakeLock = null;
+let mediaDest = null;
+let audioEl = null;
+
+const PREBUFFER     = 0.06;   // initial buffer (60 ms)
+const TARGET_BUFFER = 0.08;   // steady-state target (80 ms)
+const MAX_BUFFER    = 0.50;   // hard catch-up above this (500 ms)
+const MAX_RATE_DEV  = 0.02;   // ±2% pitch shift cap (inaudible)
+const RATE_GAIN     = 0.5;    // 100 ms overshoot → +5% (clamped to +2%)
+const RATE_SMOOTH   = 0.05;   // per-chunk smoothing toward target rate
+
+btn.addEventListener('click', async () => {
+  if (playing) {
+    stop();
+  } else {
+    await start();
+  }
+});
+
+async function tryWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (_) {}
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    try { wakeLock.release(); } catch (_) {}
+    wakeLock = null;
+  }
+}
+
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'BrowserSpeaker',
+      artist: 'PC audio stream',
+      album: location.host,
+    });
+    navigator.mediaSession.playbackState = 'playing';
+    navigator.mediaSession.setActionHandler('pause', () => stop());
+    navigator.mediaSession.setActionHandler('play',  () => { if (!playing) start(); });
+    navigator.mediaSession.setActionHandler('stop',  () => stop());
+  } catch (_) {}
+}
+
+function clearMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.playbackState = 'none';
+    navigator.mediaSession.metadata = null;
+  } catch (_) {}
+}
+
+async function start() {
+  btn.disabled = true;
+  status.textContent = 'Connecting...';
+  try {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}/ws`);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => { status.textContent = 'Waiting for config...'; };
+    ws.onmessage = onMessage;
+    ws.onerror = () => { status.textContent = 'Connection error'; cleanup(); };
+    ws.onclose = () => {
+      if (playing) status.textContent = 'Connection lost';
+      cleanup();
+    };
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+async function onMessage(e) {
+  if (typeof e.data === 'string') {
+    cfg = JSON.parse(e.data);
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: cfg.sampleRate,
+        latencyHint: 'interactive',
+      });
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      // Route through MediaStreamDestination + <audio> so the OS treats this
+      // as proper media playback (lock-screen title, background continuity).
+      mediaDest = ctx.createMediaStreamDestination();
+      audioEl = document.createElement('audio');
+      audioEl.srcObject = mediaDest.stream;
+      audioEl.autoplay = true;
+      audioEl.playsInline = true;
+      audioEl.setAttribute('playsinline', '');
+      audioEl.controls = false;
+      audioEl.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
+      document.body.appendChild(audioEl);
+      try { await audioEl.play(); } catch (_) {}
+    } catch (err) {
+      status.textContent = 'AudioContext error: ' + err.message;
+      cleanup();
+      return;
+    }
+    nextTime = ctx.currentTime + PREBUFFER;
+    playing = true;
+    btn.disabled = false;
+    btn.textContent = 'Stop';
+    btn.classList.add('playing');
+    info.textContent = `${cfg.sampleRate} Hz / ${cfg.channels} ch`;
+    setupMediaSession();
+    tryWakeLock();
+    startStats();
+    return;
+  }
+  if (!ctx || !cfg) return;
+
+  const f32 = new Float32Array(e.data);
+  const channels = cfg.channels;
+  const frames = f32.length / channels;
+  if (frames <= 0) return;
+
+  const buf = ctx.createBuffer(channels, frames, cfg.sampleRate);
+  for (let c = 0; c < channels; c++) {
+    const ch = buf.getChannelData(c);
+    for (let i = 0; i < frames; i++) {
+      ch[i] = f32[i * channels + c];
+    }
+  }
+
+  const now = ctx.currentTime;
+  let buffered = Math.max(0, nextTime - now);
+
+  // hard catch-up only if we've completely lost the plot
+  if (nextTime < now || buffered > MAX_BUFFER) {
+    nextTime = now + TARGET_BUFFER;
+    smoothedRate = 1.0;
+    buffered = TARGET_BUFFER;
+  }
+
+  // adaptive rate: drift buffered → TARGET_BUFFER without audible glitch
+  const error = buffered - TARGET_BUFFER;            // s, positive = too much
+  let targetRate = 1.0 + error * RATE_GAIN;
+  if (targetRate > 1 + MAX_RATE_DEV) targetRate = 1 + MAX_RATE_DEV;
+  if (targetRate < 1 - MAX_RATE_DEV) targetRate = 1 - MAX_RATE_DEV;
+  smoothedRate += (targetRate - smoothedRate) * RATE_SMOOTH;
+
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.playbackRate.value = smoothedRate;
+  src.connect(mediaDest || ctx.destination);
+  src.start(nextTime);
+  nextTime += buf.duration / smoothedRate;           // actual playback duration
+  chunksReceived++;
+}
+
+function startStats() {
+  if (statsTimer) clearInterval(statsTimer);
+  statsTimer = setInterval(() => {
+    if (!ctx || !playing) return;
+    const buffered = Math.max(0, nextTime - ctx.currentTime) * 1000;
+    const drift = ((smoothedRate - 1) * 100).toFixed(2);
+    const sign = smoothedRate >= 1 ? '+' : '';
+    status.textContent = `Connected — buffer ${buffered.toFixed(0)} ms · rate ${sign}${drift}%`;
+  }, 500);
+}
+
+function stop() {
+  if (ws) try { ws.close(); } catch(_) {}
+  cleanup();
+  status.textContent = 'Stopped';
+}
+
+function cleanup() {
+  playing = false;
+  btn.classList.remove('playing');
+  btn.textContent = 'Start';
+  btn.disabled = false;
+  info.textContent = '';
+  if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
+  if (audioEl) {
+    try { audioEl.pause(); audioEl.srcObject = null; audioEl.remove(); } catch (_) {}
+    audioEl = null;
+  }
+  mediaDest = null;
+  if (ctx) { try { ctx.close(); } catch(_) {} ctx = null; }
+  ws = null; cfg = null; chunksReceived = 0; smoothedRate = 1.0;
+  releaseWakeLock();
+  clearMediaSession();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+  if (audioEl && audioEl.paused && playing) audioEl.play().catch(()=>{});
+  if (playing && !wakeLock) tryWakeLock();
+});
+</script>
+</body>
+</html>

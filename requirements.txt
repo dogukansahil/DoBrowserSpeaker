@@ -1,0 +1,4 @@
+aiohttp>=3.9
+PyAudioWPatch>=0.2.12.6
+qrcode[pil]>=7.4
+Pillow>=10.0
