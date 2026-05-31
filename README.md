@@ -1,4 +1,4 @@
-# BrowserSpeaker
+# <img src="logo.png" width="40" height="40" align="left" style="margin-right:8px"> BrowserSpeaker
 
 [![Release](https://img.shields.io/github/v/release/dogukansahil/BrowserSpeaker?label=version&color=blue)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
 [![Download](https://img.shields.io/badge/download-releases-brightgreen)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
@@ -6,7 +6,7 @@
 [![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)](LICENSE)
 
-Turn any phone, tablet, or laptop into a wireless speaker for your Windows or Linux PC. Anything that has a browser becomes an extra speaker on the same network — no app to install on the client.
+Turn any phone, tablet, or laptop into a wireless speaker for your **Windows** or **Linux** PC. Anything that has a browser becomes an extra speaker on the same network — **no app to install on the client**.
 
 ## How it works
 
