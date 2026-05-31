@@ -1,5 +1,11 @@
 # BrowserSpeaker
 
+[![Release](https://img.shields.io/github/v/release/dogukansahil/BrowserSpeaker?label=version&color=blue)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
+[![Download](https://img.shields.io/badge/download-releases-brightgreen)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-0078d4?logo=windows&logoColor=white)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
+[![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)](LICENSE)
+
 Turn any phone, tablet, or laptop into a wireless speaker for your Windows or Linux PC. Anything that has a browser becomes an extra speaker on the same network — no app to install on the client.
 
 ## How it works
@@ -28,21 +34,21 @@ The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/Pulse
 
 ## Download
 
-Pre-built binaries are in the [`dist/`](dist/) folder:
+Pre-built binaries are available on the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest):
 
 | Platform | File |
 |----------|------|
-| Linux (Debian/Ubuntu, amd64) | `dist/browserspeaker_1.0_amd64.deb` |
-| Windows | Build it yourself (see below) |
+| Windows | `BrowserSpeaker.exe` |
+| Linux (Debian/Ubuntu, amd64) | `browserspeaker_1.0_amd64.deb` |
 
 Install on Linux:
 ```
-sudo apt install ./dist/browserspeaker_1.0_amd64.deb
+sudo apt install ./browserspeaker_1.0_amd64.deb
 ```
 
 ## Build it yourself
 
-This project ships only as source. Compile your own binary.
+Pre-built binaries are on the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest). If you prefer to compile yourself:
 
 On Windows:
 
