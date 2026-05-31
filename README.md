@@ -48,7 +48,9 @@ sudo apt install ./browserspeaker_1.0_amd64.deb
 
 ## Build it yourself
 
-Pre-built binaries are on the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest). If you prefer to compile yourself:
+> **Don't want to build?** Grab a pre-built binary from the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest) instead.
+
+If you prefer to compile yourself:
 
 On Windows:
 
