@@ -1,0 +1,30 @@
+# Build outputs
+build/
+dist/
+pkgroot/
+AppDir/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / tools
+.vscode/
+.idea/
+.claude/
+*.local
+
+# Secrets / env
+.env
+*.env
+*.key
+*.pem

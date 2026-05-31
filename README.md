@@ -1,12 +1,12 @@
 # BrowserSpeaker
 
-Turn any phone, tablet, or laptop into a wireless speaker for your Windows PC. Anything that has a browser becomes an extra speaker on the same network — no app to install on the client.
+Turn any phone, tablet, or laptop into a wireless speaker for your Windows or Linux PC. Anything that has a browser becomes an extra speaker on the same network — no app to install on the client.
 
 ## How it works
 
-Requires Windows 10+ and Python 3.10+ to build. End users do not need Python — only the built .exe file inside the dist folder.
+Requires Python 3.10+ to build. End users do not need Python — only the built binary.
 
-The PC captures its own audio output via WASAPI loopback and streams raw PCM over a local WebSocket. Clients open `http://<your-pc-ip>:8765` in any browser and play it back through Web Audio API.
+The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/PulseAudio monitor on Linux) and streams raw PCM over a local WebSocket. Clients open `http://<your-pc-ip>:8765` in any browser and play it back through Web Audio API.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
   <img src="docs/screenshot1.png" alt="BrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
@@ -17,18 +17,34 @@ The PC captures its own audio output via WASAPI loopback and streams raw PCM ove
 
 - 48 kHz stereo Float32 PCM streaming, ~80 ms end-to-end buffer
 - Adaptive playback-rate drift correction (±2 %) — no clicks, no buffer resets
-- Per-device source selection (any WASAPI loopback target on the PC)
+- Per-device source selection (WASAPI loopback on Windows, PipeWire sinks on Linux)
 - Per-interface network selection (Ethernet, Wi-Fi, virtual adapters)
 - Live RMS / dBFS meter and a built-in test-tone generator
 - QR code for one-tap mobile join
 - Media Session integration — lock-screen title, artwork, background playback
 - Silence keep-alive so the mobile media session never decays when the PC is quiet
-- Optional auto-start on Windows boot (HKCU Run key)
+- Optional auto-start on boot (Windows registry / Linux XDG autostart)
 - Auto-minimize when a client connects, auto-restore on disconnect
+
+## Download
+
+Pre-built binaries are in the [`dist/`](dist/) folder:
+
+| Platform | File |
+|----------|------|
+| Linux (Debian/Ubuntu, amd64) | `dist/browserspeaker_1.0_amd64.deb` |
+| Windows | Build it yourself (see below) |
+
+Install on Linux:
+```
+sudo apt install ./dist/browserspeaker_1.0_amd64.deb
+```
 
 ## Build it yourself
 
 This project ships only as source. Compile your own binary.
+
+On Windows:
 
 ```
 git clone https://github.com/dogukansahil/browserspeaker
@@ -38,15 +54,45 @@ python -m venv .venv
 python build.py
 ```
 
-The result is `dist\BrowserSpeaker.exe` (~40 MB), fully self-contained. Move it wherever you want; no installer, no registry footprint until you tick "Start on Windows boot" inside the app.
+The result is `dist\BrowserSpeaker.exe` (~40 MB), fully self-contained.
+
+On Linux (Debian/Ubuntu):
+
+```
+git clone https://github.com/dogukansahil/browserspeaker
+cd browserspeaker
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+python3 build_linux.py --deb
+```
+
+The build script automatically installs `python3-tk` if missing (via a graphical sudo prompt).
+The result is `dist/browserspeaker_1.0_amd64.deb`. Install it with:
+
+```
+sudo apt install ./dist/browserspeaker_1.0_amd64.deb
+```
+
+For AppImage instead of .deb:
+
+```
+python3 build_linux.py --appimage
+```
+
+The Linux build captures system audio via PipeWire (`pw-record`) with a fallback to PulseAudio monitor sources through `sounddevice`.
 
 ## Run from source
 
+On Windows:
 ```
 .venv\Scripts\python server.py
 ```
-
 Or launch silently via `BrowserSpeaker.vbs` (no console window).
+
+On Linux:
+```
+.venv/bin/python server.py
+```
 
 ## On the client
 

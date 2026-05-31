@@ -1,4 +1,6 @@
 aiohttp>=3.9
-PyAudioWPatch>=0.2.12.6
+PyAudioWPatch>=0.2.12.6; sys_platform == "win32"
+sounddevice>=0.4.6; sys_platform != "win32"
+pulsectl>=1.5; sys_platform != "win32"
 qrcode[pil]>=7.4
 Pillow>=10.0

@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import asyncio
+import json
 import math
 import re
+import shutil
 import socket
 import struct
 import subprocess
@@ -22,15 +24,26 @@ import sys
 import threading
 import time
 import webbrowser
-import winreg
 from pathlib import Path
 
 from aiohttp import web, WSMsgType
-import pyaudiowpatch as pyaudio
-import tkinter as tk
-from tkinter import ttk
 import qrcode
 from PIL import ImageTk
+import tkinter as tk
+from tkinter import ttk
+
+IS_WINDOWS = sys.platform.startswith("win")
+IS_LINUX = sys.platform.startswith("linux")
+
+if IS_WINDOWS:
+    import winreg
+    import pyaudiowpatch as pyaudio
+else:
+    import sounddevice as sd
+    try:
+        import pulsectl
+    except ImportError:
+        pulsectl = None
 
 def _resource_root() -> Path:
     """Folder containing bundled resources (static/, etc.)."""
@@ -62,45 +75,70 @@ def list_interfaces() -> list[tuple[str, str]]:
     results: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
 
-    try:
-        raw = subprocess.run(
-            ["ipconfig"], capture_output=True,
-            creationflags=0x08000000, timeout=5,
-        ).stdout
-        text = raw.decode("utf-8", errors="replace")
-        if "adapter" not in text.lower():
-            text = raw.decode("cp857", errors="replace")
+    if IS_WINDOWS:
+        try:
+            raw = subprocess.run(
+                ["ipconfig"], capture_output=True,
+                creationflags=0x08000000, timeout=5,
+            ).stdout
+            text = raw.decode("utf-8", errors="replace")
+            if "adapter" not in text.lower():
+                text = raw.decode("cp857", errors="replace")
 
-        current = None
-        for line in text.splitlines():
-            stripped = line.strip()
-            m = re.match(r"^(.+?adapter\s+.+?):\s*$", line, re.IGNORECASE)
-            if m:
-                name = m.group(1).strip()
-                name = re.sub(
-                    r"^(Ethernet|Wireless LAN|Unknown|PPP|Tunnel)\s+adapter\s+",
-                    lambda x: {
-                        "ethernet": "Ethernet: ",
-                        "wireless lan": "Wi-Fi: ",
-                        "unknown": "Other: ",
-                        "ppp": "PPP: ",
-                        "tunnel": "Tunnel: ",
-                    }.get(x.group(1).lower(), x.group(0)),
-                    name, flags=re.IGNORECASE,
-                )
-                current = name
-                continue
-            m = re.search(r"IPv4[^:]*:\s*([\d\.]+)", stripped)
-            if m and current:
-                ip = m.group(1)
-                if ip.startswith("169.254") or ip == "0.0.0.0":
+            current = None
+            for line in text.splitlines():
+                stripped = line.strip()
+                m = re.match(r"^(.+?adapter\s+.+?):\s*$", line, re.IGNORECASE)
+                if m:
+                    name = m.group(1).strip()
+                    name = re.sub(
+                        r"^(Ethernet|Wireless LAN|Unknown|PPP|Tunnel)\s+adapter\s+",
+                        lambda x: {
+                            "ethernet": "Ethernet: ",
+                            "wireless lan": "Wi-Fi: ",
+                            "unknown": "Other: ",
+                            "ppp": "PPP: ",
+                            "tunnel": "Tunnel: ",
+                        }.get(x.group(1).lower(), x.group(0)),
+                        name, flags=re.IGNORECASE,
+                    )
+                    current = name
                     continue
-                key = (current, ip)
-                if key not in seen:
-                    seen.add(key)
-                    results.append(key)
-    except Exception:
-        pass
+                m = re.search(r"IPv4[^:]*:\s*([\d\.]+)", stripped)
+                if m and current:
+                    ip = m.group(1)
+                    if ip.startswith("169.254") or ip == "0.0.0.0":
+                        continue
+                    key = (current, ip)
+                    if key not in seen:
+                        seen.add(key)
+                        results.append(key)
+        except Exception:
+            pass
+    else:
+        try:
+            raw = subprocess.run(
+                ["ip", "-4", "addr", "show"], capture_output=True,
+                text=True, timeout=5,
+            ).stdout
+            current = None
+            for line in raw.splitlines():
+                m = re.match(r"^\d+:\s+([^:]+):", line)
+                if m:
+                    current = m.group(1)
+                    continue
+                m = re.search(r"inet\s+([\d\.]+)/", line)
+                if m and current:
+                    ip = m.group(1)
+                    if ip.startswith("127.") or ip.startswith("169.254"):
+                        continue
+                    name = current
+                    key = (name, ip)
+                    if key not in seen:
+                        seen.add(key)
+                        results.append(key)
+        except Exception:
+            pass
 
     if not results:
         try:
@@ -134,8 +172,9 @@ class AudioBroadcaster:
     def __init__(self):
         self.clients: set[web.WebSocketResponse] = set()
         self.loop: asyncio.AbstractEventLoop | None = None
-        self.pa: pyaudio.PyAudio | None = None
+        self.pa = None
         self.stream = None
+        self._pw_proc = None
         self.device_info: dict | None = None
         self.sample_rate = 48000
         self.channels = 2
@@ -147,88 +186,256 @@ class AudioBroadcaster:
         self.total_chunks = 0
         self.test_tone_active = False
 
-    # ---- Device enumeration ----
-    def list_loopback_devices(self) -> list[dict]:
-        pa = self.pa or pyaudio.PyAudio()
+    # ---- PipeWire helpers ----
+    def _has_pipewire(self) -> bool:
+        return shutil.which("pw-record") is not None
+
+    def _list_pipewire_sinks(self) -> list[dict]:
         devices = []
         try:
-            for d in pa.get_loopback_device_info_generator():
+            raw = subprocess.run(
+                ["pw-dump"], capture_output=True, text=True, timeout=5
+            ).stdout
+            data = json.loads(raw)
+            for node in data:
+                if "Node" not in node.get("type", ""):
+                    continue
+                props = node.get("info", {}).get("props", {})
+                if props.get("media.class") != "Audio/Sink":
+                    continue
+                name = props.get("node.name", "")
+                desc = props.get("node.description", name)
+                if not name:
+                    continue
                 devices.append({
-                    "index": int(d["index"]),
-                    "name": str(d["name"]),
-                    "channels": int(d["maxInputChannels"]) or 2,
-                    "rate": int(d["defaultSampleRate"]),
+                    "index": name,
+                    "name": desc,
+                    "channels": 2,
+                    "rate": 48000,
+                    "backend": "pipewire",
                 })
-        except Exception:
-            pass
-        if self.pa is None:
-            pa.terminate()
-
-        try:
-            default = pyaudio.PyAudio().get_default_wasapi_loopback()
-            default_idx = int(default["index"])
-            for i, dev in enumerate(devices):
-                if dev["index"] == default_idx:
-                    dev["default"] = True
-                    devices.insert(0, devices.pop(i))
-                    break
         except Exception:
             pass
         return devices
 
-    def default_device_index(self) -> int | None:
+    def _open_pipewire_stream(self, target: str):
+        self.sample_rate = 48000
+        self.channels = 2
+        self.device_info = {"name": target}
+        chunk_frames = int(self.sample_rate * CHUNK_MS / 1000)
+        chunk_bytes = chunk_frames * self.channels * 4
+
         try:
-            pa = pyaudio.PyAudio()
-            d = pa.get_default_wasapi_loopback()
-            pa.terminate()
-            return int(d["index"])
+            proc = subprocess.Popen(
+                [
+                    "pw-record",
+                    "--target", target,
+                    "--format", "f32",
+                    "--rate", str(self.sample_rate),
+                    "--channels", str(self.channels),
+                    "--latency", f"{CHUNK_MS}ms",
+                    "-",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception as e:
+            self.error = f"Failed to start pw-record: {e}"
+            return
+
+        self._pw_proc = proc
+        self.error = None
+
+        def _read_loop():
+            while True:
+                data = proc.stdout.read(chunk_bytes)
+                if not data:
+                    break
+                self._callback(data, len(data) // (self.channels * 4), None, None)
+
+        threading.Thread(target=_read_loop, daemon=True).start()
+
+    # ---- Device enumeration ----
+    def list_loopback_devices(self) -> list[dict]:
+        devices = []
+        if IS_WINDOWS:
+            pa = self.pa or pyaudio.PyAudio()
+            try:
+                for d in pa.get_loopback_device_info_generator():
+                    devices.append({
+                        "index": int(d["index"]),
+                        "name": str(d["name"]),
+                        "channels": int(d["maxInputChannels"]) or 2,
+                        "rate": int(d["defaultSampleRate"]),
+                    })
+            except Exception:
+                pass
+            if self.pa is None:
+                pa.terminate()
+
+            try:
+                default = pyaudio.PyAudio().get_default_wasapi_loopback()
+                default_idx = int(default["index"])
+                for i, dev in enumerate(devices):
+                    if dev["index"] == default_idx:
+                        dev["default"] = True
+                        devices.insert(0, devices.pop(i))
+                        break
+            except Exception:
+                pass
+            return devices
+
+        if self._has_pipewire():
+            pw_devices = self._list_pipewire_sinks()
+            if pw_devices:
+                pw_devices[0]["default"] = True
+                return pw_devices
+
+        try:
+            query = sd.query_devices()
+            for idx, d in enumerate(query):
+                if d["max_input_channels"] <= 0:
+                    continue
+                name = str(d["name"])
+                if "monitor" not in name.lower() and "loopback" not in name.lower():
+                    continue
+                devices.append({
+                    "index": idx,
+                    "name": name,
+                    "channels": int(d["max_input_channels"]) or 2,
+                    "rate": int(d["default_samplerate"] or 48000),
+                    "backend": "sounddevice",
+                })
         except Exception:
-            for d in self.list_loopback_devices():
-                return d["index"]
-            return None
+            pass
+
+        if not devices:
+            try:
+                query = sd.query_devices()
+                for idx, d in enumerate(query):
+                    if d["max_input_channels"] <= 0:
+                        continue
+                    devices.append({
+                        "index": idx,
+                        "name": str(d["name"]),
+                        "channels": int(d["max_input_channels"]) or 2,
+                        "rate": int(d["default_samplerate"] or 48000),
+                        "backend": "sounddevice",
+                    })
+            except Exception:
+                pass
+
+        if devices and pulsectl is not None:
+            try:
+                with pulsectl.Pulse("BrowserSpeaker") as pulse:
+                    default_sink = pulse.server_info().default_sink_name
+                    if default_sink:
+                        monitor_name = f"{default_sink}.monitor"
+                        for i, dev in enumerate(devices):
+                            if monitor_name.lower() in dev["name"].lower():
+                                dev["default"] = True
+                                devices.insert(0, devices.pop(i))
+                                break
+            except Exception:
+                pass
+
+        return devices
+
+    def default_device_index(self):
+        if IS_WINDOWS:
+            try:
+                pa = pyaudio.PyAudio()
+                d = pa.get_default_wasapi_loopback()
+                pa.terminate()
+                return int(d["index"])
+            except Exception:
+                pass
+
+        for d in self.list_loopback_devices():
+            return d["index"]
+        return None
 
     # ---- Stream lifecycle ----
-    def _open_stream(self, device_index: int):
+    def _open_stream(self, device_index):
+        if self._pw_proc is not None:
+            try:
+                self._pw_proc.terminate()
+            except Exception:
+                pass
+            self._pw_proc = None
+
         if self.stream is not None:
             try:
-                self.stream.stop_stream()
+                if IS_WINDOWS:
+                    self.stream.stop_stream()
                 self.stream.close()
             except Exception:
                 pass
             self.stream = None
 
-        dev = self.pa.get_device_info_by_index(device_index)
-        self.device_info = dev
-        self.sample_rate = int(dev["defaultSampleRate"])
-        self.channels = int(dev["maxInputChannels"]) or 2
-        chunk_frames = int(self.sample_rate * (CHUNK_MS / 1000))
+        if IS_LINUX and isinstance(device_index, str):
+            self._open_pipewire_stream(device_index)
+            return
+
+        if IS_WINDOWS:
+            dev = self.pa.get_device_info_by_index(device_index)
+            self.device_info = dev
+            self.sample_rate = int(dev["defaultSampleRate"])
+            self.channels = int(dev["maxInputChannels"]) or 2
+            chunk_frames = int(self.sample_rate * (CHUNK_MS / 1000))
+
+            try:
+                self.stream = self.pa.open(
+                    format=pyaudio.paFloat32,
+                    channels=self.channels,
+                    rate=self.sample_rate,
+                    input=True,
+                    input_device_index=device_index,
+                    frames_per_buffer=chunk_frames,
+                    stream_callback=self._callback_pyaudio,
+                )
+                self.stream.start_stream()
+                self.error = None
+            except Exception as e:
+                self.error = f"Failed to open audio stream: {e}"
+            return
 
         try:
-            self.stream = self.pa.open(
-                format=pyaudio.paFloat32,
+            dev = sd.query_devices(device_index, kind="input")
+            self.device_info = dev
+            self.sample_rate = int(dev["default_samplerate"] or 48000)
+            self.channels = int(dev["max_input_channels"] or 2)
+            self.stream = sd.InputStream(
+                device=device_index,
                 channels=self.channels,
-                rate=self.sample_rate,
-                input=True,
-                input_device_index=device_index,
-                frames_per_buffer=chunk_frames,
-                stream_callback=self._callback,
+                samplerate=self.sample_rate,
+                dtype="float32",
+                callback=self._callback_linux,
+                latency="low",
             )
-            self.stream.start_stream()
+            self.stream.start()
             self.error = None
         except Exception as e:
             self.error = f"Failed to open audio stream: {e}"
 
+    def _callback_linux(self, indata, frames, time_info, status):
+        if status:
+            pass
+        self._callback(indata.tobytes(), frames, time_info, status)
+        return None
+
     def start(self, loop: asyncio.AbstractEventLoop):
         self.loop = loop
-        self.pa = pyaudio.PyAudio()
+        if IS_WINDOWS:
+            self.pa = pyaudio.PyAudio()
         idx = self.default_device_index()
         if idx is None:
-            self.error = "No WASAPI loopback device found."
+            self.error = "No loopback audio device found."
             return
         self._open_stream(idx)
 
-    def switch_device(self, device_index: int):
-        if self.pa is None or self.loop is None:
+    def switch_device(self, device_index):
+        if self.loop is None:
             return
         # Kick existing clients so they reconnect with new sample rate / channels.
         for ws in list(self.clients):
@@ -240,14 +447,21 @@ class AudioBroadcaster:
         self._open_stream(device_index)
 
     def stop(self):
+        if self._pw_proc is not None:
+            try:
+                self._pw_proc.terminate()
+            except Exception:
+                pass
+            self._pw_proc = None
         if self.stream is not None:
             try:
-                self.stream.stop_stream()
+                if IS_WINDOWS:
+                    self.stream.stop_stream()
                 self.stream.close()
             except Exception:
                 pass
             self.stream = None
-        if self.pa is not None:
+        if IS_WINDOWS and self.pa is not None:
             try:
                 self.pa.terminate()
             except Exception:
@@ -267,6 +481,10 @@ class AudioBroadcaster:
                     )
                 except Exception:
                     pass
+        return None
+
+    def _callback_pyaudio(self, in_data, frame_count, time_info, status):
+        self._callback(in_data, frame_count, time_info, status)
         return (None, pyaudio.paContinue)
 
     async def _broadcast(self, data: bytes):
@@ -406,53 +624,79 @@ def run_server_thread(bc: AudioBroadcaster, ready_evt: threading.Event):
 
 # ---------- GUI ----------
 
-# ---------- Windows auto-start (HKCU\...\Run) ----------
+# ---------- Autostart helpers ----------
 
 _RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 _RUN_VALUE = "BrowserSpeaker"
+_LINUX_AUTOSTART_DIR = Path.home() / ".config" / "autostart"
+_LINUX_AUTOSTART_FILE = _LINUX_AUTOSTART_DIR / "browserspeaker.desktop"
 
 
 def _autostart_command() -> str:
     if getattr(sys, "frozen", False):
         return f'"{sys.executable}"'
-    vbs = HERE / "BrowserSpeaker.vbs"
-    if vbs.exists():
-        return f'wscript.exe "{vbs}"'
-    pyw = Path(sys.executable).with_name("pythonw.exe")
-    exe = str(pyw if pyw.exists() else Path(sys.executable))
-    return f'"{exe}" "{HERE / "server.py"}"'
+    return f'"{Path(sys.executable)}" "{HERE / "server.py"}"'
 
 
 def autostart_enabled() -> bool:
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _RUN_KEY) as k:
-            winreg.QueryValueEx(k, _RUN_VALUE)
-        return True
-    except FileNotFoundError:
-        return False
-    except OSError:
-        return False
+    if IS_WINDOWS:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _RUN_KEY) as k:
+                winreg.QueryValueEx(k, _RUN_VALUE)
+            return True
+        except FileNotFoundError:
+            return False
+        except OSError:
+            return False
+
+    if IS_LINUX:
+        return _LINUX_AUTOSTART_FILE.exists()
+
+    return False
 
 
 def set_autostart(enable: bool) -> None:
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _RUN_KEY, 0,
-                            winreg.KEY_SET_VALUE) as k:
+    if IS_WINDOWS:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _RUN_KEY, 0,
+                                winreg.KEY_SET_VALUE) as k:
+                if enable:
+                    winreg.SetValueEx(k, _RUN_VALUE, 0, winreg.REG_SZ,
+                                      _autostart_command())
+                else:
+                    try:
+                        winreg.DeleteValue(k, _RUN_VALUE)
+                    except FileNotFoundError:
+                        pass
+        except OSError:
+            pass
+        return
+
+    if IS_LINUX:
+        try:
+            _LINUX_AUTOSTART_DIR.mkdir(parents=True, exist_ok=True)
             if enable:
-                winreg.SetValueEx(k, _RUN_VALUE, 0, winreg.REG_SZ,
-                                  _autostart_command())
+                _LINUX_AUTOSTART_FILE.write_text(
+                    "[Desktop Entry]\n"
+                    "Type=Application\n"
+                    "Name=BrowserSpeaker\n"
+                    "Exec=" + _autostart_command() + "\n"
+                    "Terminal=false\n"
+                    "X-GNOME-Autostart-enabled=true\n"
+                    "StartupWMClass=BrowserSpeaker\n"
+                    "NoDisplay=true\n"
+                )
             else:
-                try:
-                    winreg.DeleteValue(k, _RUN_VALUE)
-                except FileNotFoundError:
-                    pass
-    except OSError:
-        pass
+                if _LINUX_AUTOSTART_FILE.exists():
+                    _LINUX_AUTOSTART_FILE.unlink()
+        except Exception:
+            pass
+        return
 
 
 def _apply_app_id(root: tk.Tk) -> None:
-    """Tell Windows this is its own app so the taskbar does not group it under
-    pythonw.exe. No icon image is set — title text only."""
+    if not IS_WINDOWS:
+        return
     try:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
@@ -655,7 +899,8 @@ def run_gui(bc: AudioBroadcaster):
     def on_autostart_toggle():
         set_autostart(autostart_var.get())
         autostart_var.set(autostart_enabled())
-    ttk.Checkbutton(root, text="Start on Windows boot",
+    autostart_label = "Start on Windows boot" if IS_WINDOWS else "Start on startup"
+    ttk.Checkbutton(root, text=autostart_label,
                     variable=autostart_var, style="BS.TCheckbutton",
                     command=on_autostart_toggle, cursor="hand2").pack(pady=(4, 0))
 
@@ -668,7 +913,7 @@ def run_gui(bc: AudioBroadcaster):
     footer.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/dogukansahil/"))
     footer.bind("<Enter>", lambda e: footer.configure(fg=ACCENT))
     footer.bind("<Leave>", lambda e: footer.configure(fg=MUTED))
-    tk.Label(footer_row, text="v0.2", fg=MUTED, bg=BG,
+    tk.Label(footer_row, text="v1.0", fg=MUTED, bg=BG,
              font=("Segoe UI", 8)).pack(side="left", padx=(8, 0))
 
     prev_clients = [0]

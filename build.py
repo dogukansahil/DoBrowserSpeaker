@@ -59,6 +59,10 @@ def ensure_runtime_deps() -> None:
 
 def run_pyinstaller() -> None:
     print("Running PyInstaller (this takes 1-3 minutes)...")
+    # Remove only the Windows exe so Linux .deb in dist/ is preserved.
+    old_exe = HERE / "dist" / "BrowserSpeaker.exe"
+    if old_exe.exists():
+        old_exe.unlink()
     args = [
         sys.executable, "-m", "PyInstaller",
         "--noconfirm",

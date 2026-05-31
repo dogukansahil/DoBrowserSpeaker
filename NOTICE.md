@@ -15,12 +15,11 @@ limitations under the License.
 
 ## THIRD-PARTY COMPONENTS
 
-
-The built binary (BrowserSpeaker.exe) statically bundles the following
-third-party components. Each component is distributed under its own license,
-reproduced below as required by that license. The Apache 2.0 license under
-which BrowserSpeaker is offered does not modify the terms of any third-party
-license.
+The built binaries (BrowserSpeaker.exe on Windows, browserspeaker on Linux)
+bundle the following third-party components. Each component is distributed
+under its own license, reproduced below as required by that license.
+The Apache 2.0 license under which BrowserSpeaker is offered does not modify
+the terms of any third-party license.
 
 --------------------------------------------------------------------------------
 1. aiohttp
@@ -63,10 +62,64 @@ License:   MIT License
     DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
-3. PortAudio
+3. sounddevice
+--------------------------------------------------------------------------------
+Project:   https://python-sounddevice.readthedocs.io/
+Bundled:   Linux binary (audio capture via PortAudio)
+License:   MIT License
+
+    Copyright (c) 2015-2025 Matthias Geier
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+4. pulsectl
+--------------------------------------------------------------------------------
+Project:   https://github.com/mk-fg/python-pulse-control
+Bundled:   Linux binary (PulseAudio/PipeWire device enumeration)
+License:   MIT License
+
+    Copyright (c) 2015 Mike Kazantsev
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+5. PortAudio
 --------------------------------------------------------------------------------
 Project:   http://www.portaudio.com/
-Bundled:   As a native DLL via PyAudioWPatch
+Bundled:   Windows binary via PyAudioWPatch; Linux binary via sounddevice
 License:   MIT License
 
     PortAudio Portable Real-Time Audio Library
@@ -91,7 +144,7 @@ License:   MIT License
     DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
-4. python-qrcode
+6. python-qrcode
 --------------------------------------------------------------------------------
 Project:   https://github.com/lincolnloop/python-qrcode
 License:   BSD 3-Clause License
@@ -129,7 +182,7 @@ License:   BSD 3-Clause License
     POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
-5. Pillow
+7. Pillow
 --------------------------------------------------------------------------------
 Project:   https://github.com/python-pillow/Pillow
 License:   HPND License (MIT-CMU style)
@@ -166,7 +219,39 @@ License:   HPND License (MIT-CMU style)
     CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
-6. Python Standard Library
+8. Tcl/Tk
+--------------------------------------------------------------------------------
+Project:   https://www.tcl.tk/
+Bundled:   Both binaries (GUI framework underlying tkinter)
+License:   BSD-style (Tcl/Tk License)
+
+    This software is copyrighted by the Regents of the University of
+    California, Sun Microsystems, Inc., Scriptics Corporation, ActiveState
+    Corporation, and other parties. The following terms apply to all files
+    associated with the software unless explicitly disclaimed in individual
+    files.
+
+    Permission is hereby granted, without written agreement and without
+    license or royalty fees, to use, copy, modify, and distribute this
+    software and its documentation for any purpose, provided that the
+    above copyright notice and the following two paragraphs appear in
+    all copies of this software.
+
+    IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
+    FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+    ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
+    DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+    THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+    NON-INFRINGEMENT. THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS,
+    AND THE AUTHORS AND DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE
+    MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+--------------------------------------------------------------------------------
+9. Python Standard Library
 --------------------------------------------------------------------------------
 Project:   https://www.python.org/
 License:   Python Software Foundation License, Version 2
@@ -178,11 +263,11 @@ License:   Python Software Foundation License, Version 2
     https://docs.python.org/3/license.html
 
     Modules from the standard library used by this product include
-    asyncio, ctypes, math, pathlib, re, socket, struct, subprocess, sys,
-    threading, time, tkinter, webbrowser, and winreg.
+    asyncio, ctypes, json, math, pathlib, re, shutil, socket, struct,
+    subprocess, sys, threading, time, tkinter, webbrowser, and winreg.
 
 --------------------------------------------------------------------------------
-7. PyInstaller (bootloader only)
+10. PyInstaller (bootloader only)
 --------------------------------------------------------------------------------
 Project:   https://github.com/pyinstaller/pyinstaller
 Bundled:   Only the bootloader is embedded in the one-file executable.
@@ -204,5 +289,3 @@ License:   GPLv2-or-later with a runtime exception for bundled binaries.
         bootloader and related files into combinations with other programs,
         and to distribute those combinations without any restriction coming
         from the use of those files.
-
-.
