@@ -96,7 +96,6 @@ On Windows:
 ```
 .venv\Scripts\python server.py
 ```
-Or launch silently via `BrowserSpeaker.vbs` (no console window).
 
 On Linux:
 ```
