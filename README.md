@@ -5,6 +5,7 @@
 [![Windows](https://img.shields.io/badge/Windows-0078d4?logo=windows&logoColor=white)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)](LICENSE)
+[![Made with Claude](https://img.shields.io/badge/built%20with-Claude-orange)](https://claude.ai)
 
 Turn any phone, tablet, or laptop into a wireless speaker for your **Windows** or **Linux** PC. Anything that has a browser becomes an extra speaker on the same network — **no app to install on the client**.
 
