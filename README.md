@@ -82,6 +82,8 @@ The result is `dist/browserspeaker_1.0_amd64.deb`. Install it with:
 sudo apt install ./dist/browserspeaker_1.0_amd64.deb
 ```
 
+> This path assumes you just built it yourself. If you downloaded from the Releases page, run `sudo apt install ./browserspeaker_1.0_amd64.deb` from your download folder instead.
+
 For AppImage instead of .deb:
 
 ```
