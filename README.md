@@ -28,6 +28,7 @@ The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/Pulse
 - Live RMS / dBFS meter and a built-in test-tone generator
 - QR code for one-tap mobile join
 - Media Session integration — lock-screen title, artwork, background playback
+- Keeps streaming with the screen off — audio continues in the background on most mobile browsers
 - Silence keep-alive so the mobile media session never decays when the PC is quiet
 - Optional auto-start on boot (Windows registry / Linux XDG autostart)
 - Auto-minimize when a client connects, auto-restore on disconnect
@@ -105,6 +106,13 @@ On Linux:
 ## On the client
 
 Open the URL the PC window shows, or scan the QR. Tap **Start**. Make sure both devices are on the same network.
+
+## Roadmap
+
+Ideas that may or may not happen:
+
+- Multiple senders (stream from more than one PC simultaneously)
+- Multiple named receivers (select which browser plays which source)
 
 ## Notes
 
