@@ -1,24 +1,25 @@
 DoBrowserSpeaker
 Copyright 2026 Dogukan Sahil
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ## THIRD-PARTY COMPONENTS
 
 The built binaries (DoBrowserSpeaker.exe on Windows, dobrowserspeaker on Linux)
 bundle the following third-party components. Each component is distributed
 under its own license, reproduced below as required by that license.
-The Apache 2.0 license under which DoBrowserSpeaker is offered does not modify
+The GNU GPL v3.0 license under which DoBrowserSpeaker is offered does not modify
 the terms of any third-party license.
 
 --------------------------------------------------------------------------------
@@ -31,8 +32,7 @@ Notice:
     Copyright aio-libs contributors.
 
 The full text of the Apache License 2.0 is available at
-http://www.apache.org/licenses/LICENSE-2.0 and is reproduced in the LICENSE
-file distributed with this software.
+http://www.apache.org/licenses/LICENSE-2.0.
 
 --------------------------------------------------------------------------------
 2. PyAudioWPatch
@@ -280,7 +280,7 @@ License:   GPLv2-or-later with a runtime exception for bundled binaries.
     by PyInstaller's one-file packaging mechanism. PyInstaller's "runtime
     exception" explicitly permits the distribution of frozen applications
     under any license; therefore, distributing this product under the
-    Apache License 2.0 is fully compatible with PyInstaller's terms.
+    GNU GPL v3.0 is fully compatible with PyInstaller's terms.
 
     The exception text:
 
