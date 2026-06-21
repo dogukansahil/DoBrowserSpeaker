@@ -1,4 +1,4 @@
-BrowserSpeaker
+DoBrowserSpeaker
 Copyright 2026 Dogukan Sahil
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,10 @@ limitations under the License.
 
 ## THIRD-PARTY COMPONENTS
 
-The built binaries (BrowserSpeaker.exe on Windows, browserspeaker on Linux)
+The built binaries (DoBrowserSpeaker.exe on Windows, dobrowserspeaker on Linux)
 bundle the following third-party components. Each component is distributed
 under its own license, reproduced below as required by that license.
-The Apache 2.0 license under which BrowserSpeaker is offered does not modify
+The Apache 2.0 license under which DoBrowserSpeaker is offered does not modify
 the terms of any third-party license.
 
 --------------------------------------------------------------------------------

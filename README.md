@@ -1,9 +1,9 @@
-# <img src="logo.png" width="40" height="40" align="left" style="margin-right:8px"> BrowserSpeaker
+# <img src="logo.png" width="40" height="40" align="left" style="margin-right:8px"> DoBrowserSpeaker
 
-[![Release](https://img.shields.io/badge/version-v1.0-blue)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
-[![Download](https://img.shields.io/badge/download-releases-brightgreen)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
-[![Windows](https://img.shields.io/badge/Windows-0078d4?logo=windows&logoColor=white)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
-[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/BrowserSpeaker/releases/latest)
+[![Release](https://img.shields.io/badge/version-v1.0-blue)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
+[![Download](https://img.shields.io/badge/download-releases-brightgreen)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-0078d4?logo=windows&logoColor=white)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)](LICENSE)
 [![Made with Claude](https://img.shields.io/badge/built%20with-Claude-orange)](https://claude.ai)
 
@@ -16,8 +16,8 @@ Requires Python 3.10+ to build. End users do not need Python — only the built 
 The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/PulseAudio monitor on Linux) and streams raw PCM over a local WebSocket. Clients open `http://<your-pc-ip>:8765` in any browser and play it back through Web Audio API.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-  <img src="docs/screenshot1.png" alt="BrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
-  <img src="docs/screenshot2.png" alt="BrowserSpeaker Mobile UI" style="height: 400px; width: auto; object-fit: contain;">
+  <img src="docs/screenshot1.png" alt="DoBrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
+  <img src="docs/screenshot2.png" alt="DoBrowserSpeaker Mobile UI" style="height: 400px; width: auto; object-fit: contain;">
 </div>
 
 ## Features
@@ -36,54 +36,54 @@ The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/Pulse
 
 ## Download
 
-Pre-built binaries are available on the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest):
+Pre-built binaries are available on the [Releases page](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest):
 
 | Platform | File |
 |----------|------|
-| Windows | `BrowserSpeaker.exe` |
-| Linux (Debian/Ubuntu, amd64) | `browserspeaker_1.0_amd64.deb` |
+| Windows | `DoBrowserSpeaker.exe` |
+| Linux (Debian/Ubuntu, amd64) | `dobrowserspeaker_1.0_amd64.deb` |
 
 Install on Linux:
 ```
-sudo apt install ./browserspeaker_1.0_amd64.deb
+sudo apt install ./dobrowserspeaker_1.0_amd64.deb
 ```
 
 ## Build it yourself
 
-> **Don't want to build?** Grab a pre-built binary from the [Releases page](https://github.com/dogukansahil/BrowserSpeaker/releases/latest) instead.
+> **Don't want to build?** Grab a pre-built binary from the [Releases page](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest) instead.
 
 If you prefer to compile yourself:
 
 On Windows:
 
 ```
-git clone https://github.com/dogukansahil/browserspeaker
-cd browserspeaker
+git clone https://github.com/dogukansahil/dobrowserspeaker
+cd dobrowserspeaker
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 python build.py
 ```
 
-The result is `dist\BrowserSpeaker.exe` (~40 MB), fully self-contained.
+The result is `dist\DoBrowserSpeaker.exe` (~40 MB), fully self-contained.
 
 On Linux (Debian/Ubuntu):
 
 ```
-git clone https://github.com/dogukansahil/browserspeaker
-cd browserspeaker
+git clone https://github.com/dogukansahil/dobrowserspeaker
+cd dobrowserspeaker
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 python3 build_linux.py --deb
 ```
 
 The build script automatically installs `python3-tk` if missing (via a graphical sudo prompt).
-The result is `dist/browserspeaker_1.0_amd64.deb`. Install it with:
+The result is `dist/dobrowserspeaker_1.0_amd64.deb`. Install it with:
 
 ```
-sudo apt install ./dist/browserspeaker_1.0_amd64.deb
+sudo apt install ./dist/dobrowserspeaker_1.0_amd64.deb
 ```
 
-> This path assumes you just built it yourself. If you downloaded from the Releases page, run `sudo apt install ./browserspeaker_1.0_amd64.deb` from your download folder instead.
+> This path assumes you just built it yourself. If you downloaded from the Releases page, run `sudo apt install ./dobrowserspeaker_1.0_amd64.deb` from your download folder instead.
 
 For AppImage instead of .deb:
 
