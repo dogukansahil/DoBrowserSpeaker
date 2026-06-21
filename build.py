@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Build BrowserSpeaker as a single Windows .exe.
+"""Build DoBrowserSpeaker as a single Windows .exe.
 
 Run:  python build.py
-Output:  dist/BrowserSpeaker.exe
+Output:  dist/DoBrowserSpeaker.exe
 """
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def ensure_runtime_deps() -> None:
 def run_pyinstaller() -> None:
     print("Running PyInstaller (this takes 1-3 minutes)...")
     # Remove only the Windows exe so Linux .deb in dist/ is preserved.
-    old_exe = HERE / "dist" / "BrowserSpeaker.exe"
+    old_exe = HERE / "dist" / "DoBrowserSpeaker.exe"
     if old_exe.exists():
         old_exe.unlink()
     args = [
@@ -69,7 +69,7 @@ def run_pyinstaller() -> None:
         "--clean",
         "--onefile",
         "--windowed",
-        "--name", "BrowserSpeaker",
+        "--name", "DoBrowserSpeaker",
         "--icon", str(HERE / "static" / "icon.ico"),
         "--add-data", f"{HERE / 'static'}{';'}static",
         "--collect-all", "pyaudiowpatch",
@@ -80,7 +80,7 @@ def run_pyinstaller() -> None:
 
 
 def cleanup() -> None:
-    for d in ("build", "BrowserSpeaker.spec"):
+    for d in ("build", "DoBrowserSpeaker.spec"):
         p = HERE / d
         if p.is_dir():
             shutil.rmtree(p, ignore_errors=True)
@@ -93,7 +93,7 @@ def main() -> None:
     ensure_runtime_deps()
     run_pyinstaller()
     cleanup()
-    exe = HERE / "dist" / "BrowserSpeaker.exe"
+    exe = HERE / "dist" / "DoBrowserSpeaker.exe"
     if exe.exists():
         size_mb = exe.stat().st_size / (1024 * 1024)
         print(f"\nDone: {exe}  ({size_mb:.1f} MB)")

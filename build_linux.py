@@ -87,7 +87,7 @@ def run_pyinstaller() -> Path:
         "--clean",
         "--onefile",
         "--windowed",
-        "--name", "BrowserSpeaker",
+        "--name", "DoBrowserSpeaker",
         "--add-data", f"{STATIC}{os.pathsep}static",
         "--hidden-import", "PIL._tkinter_finder",
         "--hidden-import", "tkinter",
@@ -96,23 +96,23 @@ def run_pyinstaller() -> Path:
         str(HERE / "server.py"),
     ]
     subprocess.check_call(args, cwd=HERE)
-    exe = DIST / "BrowserSpeaker"
+    exe = DIST / "DoBrowserSpeaker"
     if not exe.exists():
-        raise FileNotFoundError("PyInstaller did not produce dist/BrowserSpeaker")
+        raise FileNotFoundError("PyInstaller did not produce dist/DoBrowserSpeaker")
     return exe
 
 
-def write_desktop_file(path: Path, icon_name: str = "browserspeaker", version: str = "1.0") -> None:
+def write_desktop_file(path: Path, icon_name: str = "dobrowserspeaker", version: str = "1.0") -> None:
     path.write_text(
         "[Desktop Entry]\n"
         "Type=Application\n"
-        f"Name=BrowserSpeaker {version}\n"
+        f"Name=DoBrowserSpeaker {version}\n"
         "Comment=Turn any browser into a wireless speaker\n"
         f"Exec=/usr/bin/{icon_name}\n"
         f"Icon={icon_name}\n"
         "Terminal=false\n"
         "StartupNotify=true\n"
-        "StartupWMClass=BrowserSpeaker\n"
+        "StartupWMClass=DoBrowserSpeaker\n"
         "Categories=Audio;Network;\n"
     )
 
@@ -143,31 +143,31 @@ def build_deb(binary_path: Path) -> Path:
     (pkgroot / "usr" / "bin").mkdir(parents=True)
     (pkgroot / "usr" / "share" / "applications").mkdir(parents=True)
     (pkgroot / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(parents=True)
-    (pkgroot / "usr" / "share" / "doc" / "browserspeaker").mkdir(parents=True)
+    (pkgroot / "usr" / "share" / "doc" / "dobrowserspeaker").mkdir(parents=True)
 
-    shutil.copy2(binary_path, pkgroot / "usr" / "bin" / "browserspeaker")
-    (pkgroot / "usr" / "bin" / "browserspeaker").chmod(0o755)
+    shutil.copy2(binary_path, pkgroot / "usr" / "bin" / "dobrowserspeaker")
+    (pkgroot / "usr" / "bin" / "dobrowserspeaker").chmod(0o755)
 
     for doc_file in ("LICENSE", "NOTICE.md"):
         src = HERE / doc_file
         if src.exists():
-            shutil.copy2(src, pkgroot / "usr" / "share" / "doc" / "browserspeaker" / doc_file)
+            shutil.copy2(src, pkgroot / "usr" / "share" / "doc" / "dobrowserspeaker" / doc_file)
 
-    write_desktop_file(pkgroot / "usr" / "share" / "applications" / "browserspeaker.desktop", version=version)
-    convert_icon(pkgroot / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "browserspeaker.png")
+    write_desktop_file(pkgroot / "usr" / "share" / "applications" / "dobrowserspeaker.desktop", version=version)
+    convert_icon(pkgroot / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "dobrowserspeaker.png")
 
     control = (
-        f"Package: browserspeaker\n"
+        f"Package: dobrowserspeaker\n"
         f"Version: {version}\n"
         f"Section: sound\n"
         f"Priority: optional\n"
         f"Architecture: {arch}\n"
-        f"Maintainer: BrowserSpeaker <noreply@localhost>\n"
-        f"Description: BrowserSpeaker lets browsers act as wireless speakers.\n"
+        f"Maintainer: DoBrowserSpeaker <noreply@localhost>\n"
+        f"Description: DoBrowserSpeaker lets browsers act as wireless speakers.\n"
     )
     (pkgroot / "DEBIAN" / "control").write_text(control)
 
-    deb_path = DIST / f"browserspeaker_{version}_{arch}.deb"
+    deb_path = DIST / f"dobrowserspeaker_{version}_{arch}.deb"
     subprocess.check_call(["dpkg-deb", "--build", str(pkgroot), str(deb_path)])
     return deb_path
 
@@ -184,25 +184,25 @@ def build_appimage(binary_path: Path) -> Path:
     (appdir / "usr" / "share" / "applications").mkdir(parents=True)
     (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(parents=True)
 
-    shutil.copy2(binary_path, appdir / "usr" / "bin" / "BrowserSpeaker")
-    (appdir / "usr" / "bin" / "BrowserSpeaker").chmod(0o755)
-    write_desktop_file(appdir / "usr" / "share" / "applications" / "browserspeaker.desktop", icon_name="browserspeaker", version="1.0")
-    convert_icon(appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "browserspeaker.png")
+    shutil.copy2(binary_path, appdir / "usr" / "bin" / "DoBrowserSpeaker")
+    (appdir / "usr" / "bin" / "DoBrowserSpeaker").chmod(0o755)
+    write_desktop_file(appdir / "usr" / "share" / "applications" / "dobrowserspeaker.desktop", icon_name="dobrowserspeaker", version="1.0")
+    convert_icon(appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "dobrowserspeaker.png")
 
     appdir.joinpath("AppRun").write_text(
         "#!/bin/sh\n"
         "HERE=$(dirname \"$(readlink -f \"$0\")\")\n"
-        "exec \"$HERE/usr/bin/BrowserSpeaker\" \"$@\"\n"
+        "exec \"$HERE/usr/bin/DoBrowserSpeaker\" \"$@\"\n"
     )
     (appdir / "AppRun").chmod(0o755)
 
-    output = DIST / "BrowserSpeaker.AppImage"
+    output = DIST / "DoBrowserSpeaker.AppImage"
     subprocess.check_call([appimagetool, str(appdir), str(output)])
     return output
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build Linux BrowserSpeaker packages.")
+    parser = argparse.ArgumentParser(description="Build Linux DoBrowserSpeaker packages.")
     parser.add_argument("--deb", action="store_true", help="Build a Debian package")
     parser.add_argument("--appimage", action="store_true", help="Build an AppImage")
     parser.add_argument("--no-deps", action="store_true", help="Do not auto-install Python dependencies")

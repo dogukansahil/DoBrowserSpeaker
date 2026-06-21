@@ -327,7 +327,7 @@ class AudioBroadcaster:
 
         if devices and pulsectl is not None:
             try:
-                with pulsectl.Pulse("BrowserSpeaker") as pulse:
+                with pulsectl.Pulse("DoBrowserSpeaker") as pulse:
                     default_sink = pulse.server_info().default_sink_name
                     if default_sink:
                         monitor_name = f"{default_sink}.monitor"
@@ -627,9 +627,9 @@ def run_server_thread(bc: AudioBroadcaster, ready_evt: threading.Event):
 # ---------- Autostart helpers ----------
 
 _RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-_RUN_VALUE = "BrowserSpeaker"
+_RUN_VALUE = "DoBrowserSpeaker"
 _LINUX_AUTOSTART_DIR = Path.home() / ".config" / "autostart"
-_LINUX_AUTOSTART_FILE = _LINUX_AUTOSTART_DIR / "browserspeaker.desktop"
+_LINUX_AUTOSTART_FILE = _LINUX_AUTOSTART_DIR / "dobrowserspeaker.desktop"
 
 
 def _autostart_command() -> str:
@@ -679,11 +679,11 @@ def set_autostart(enable: bool) -> None:
                 _LINUX_AUTOSTART_FILE.write_text(
                     "[Desktop Entry]\n"
                     "Type=Application\n"
-                    "Name=BrowserSpeaker\n"
+                    "Name=DoBrowserSpeaker\n"
                     "Exec=" + _autostart_command() + "\n"
                     "Terminal=false\n"
                     "X-GNOME-Autostart-enabled=true\n"
-                    "StartupWMClass=BrowserSpeaker\n"
+                    "StartupWMClass=DoBrowserSpeaker\n"
                     "NoDisplay=true\n"
                 )
             else:
@@ -700,7 +700,7 @@ def _apply_app_id(root: tk.Tk) -> None:
     try:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-            "BrowserSpeaker.dogukansahil.v01"
+            "DoBrowserSpeaker.dogukansahil.v01"
         )
     except Exception:
         pass
@@ -725,7 +725,7 @@ def _disable_maximize(root: tk.Tk) -> None:
 
 def run_gui(bc: AudioBroadcaster):
     root = tk.Tk()
-    root.title("BrowserSpeaker")
+    root.title("DoBrowserSpeaker")
     root.geometry("380x600")
     root.resizable(False, False)
     _apply_app_id(root)
