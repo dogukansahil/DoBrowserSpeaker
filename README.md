@@ -1,6 +1,6 @@
 # <img src="logo.png" width="40" height="40" align="left" style="margin-right:8px"> DoBrowserSpeaker
 
-[![Release](https://img.shields.io/badge/version-v1.0-blue)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
+[![Release](https://img.shields.io/badge/version-1.0.1-blue)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
 [![Download](https://img.shields.io/badge/download-releases-brightgreen)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-0078d4?logo=windows&logoColor=white)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://github.com/dogukansahil/DoBrowserSpeaker/releases/latest)
@@ -41,11 +41,11 @@ Pre-built binaries are available on the [Releases page](https://github.com/doguk
 | Platform | File |
 |----------|------|
 | Windows | `DoBrowserSpeaker.exe` |
-| Linux (Debian/Ubuntu, amd64) | `dobrowserspeaker_1.0_amd64.deb` |
+| Linux (Debian/Ubuntu, amd64) | `dobrowserspeaker_1.0.1_amd64.deb` |
 
 Install on Linux:
 ```
-sudo apt install ./dobrowserspeaker_1.0_amd64.deb
+sudo apt install ./dobrowserspeaker_1.0.1_amd64.deb
 ```
 
 ## Build it yourself
@@ -77,13 +77,13 @@ python3 build_linux.py --deb
 ```
 
 The build script automatically installs `python3-tk` if missing (via a graphical sudo prompt).
-The result is `dist/dobrowserspeaker_1.0_amd64.deb`. Install it with:
+The result is `dist/dobrowserspeaker_1.0.1_amd64.deb`. Install it with:
 
 ```
-sudo apt install ./dist/dobrowserspeaker_1.0_amd64.deb
+sudo apt install ./dist/dobrowserspeaker_1.0.1_amd64.deb
 ```
 
-> This path assumes you just built it yourself. If you downloaded from the Releases page, run `sudo apt install ./dobrowserspeaker_1.0_amd64.deb` from your download folder instead.
+> This path assumes you just built it yourself. If you downloaded from the Releases page, run `sudo apt install ./dobrowserspeaker_1.0.1_amd64.deb` from your download folder instead.
 
 For AppImage instead of .deb:
 

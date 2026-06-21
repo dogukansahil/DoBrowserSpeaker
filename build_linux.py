@@ -103,7 +103,7 @@ def run_pyinstaller() -> Path:
     return exe
 
 
-def write_desktop_file(path: Path, icon_name: str = "dobrowserspeaker", version: str = "1.0") -> None:
+def write_desktop_file(path: Path, icon_name: str = "dobrowserspeaker", version: str = "1.0.1") -> None:
     path.write_text(
         "[Desktop Entry]\n"
         "Type=Application\n"
@@ -135,7 +135,7 @@ def convert_icon(output_path: Path) -> None:
 
 
 def build_deb(binary_path: Path) -> Path:
-    version = "1.0"
+    version = "1.0.1"
     arch = subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip()
     pkgroot = HERE / "pkgroot"
     if pkgroot.exists():
@@ -187,7 +187,7 @@ def build_appimage(binary_path: Path) -> Path:
 
     shutil.copy2(binary_path, appdir / "usr" / "bin" / "DoBrowserSpeaker")
     (appdir / "usr" / "bin" / "DoBrowserSpeaker").chmod(0o755)
-    write_desktop_file(appdir / "usr" / "share" / "applications" / "dobrowserspeaker.desktop", icon_name="dobrowserspeaker", version="1.0")
+    write_desktop_file(appdir / "usr" / "share" / "applications" / "dobrowserspeaker.desktop", icon_name="dobrowserspeaker", version="1.0.1")
     convert_icon(appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps" / "dobrowserspeaker.png")
 
     appdir.joinpath("AppRun").write_text(
