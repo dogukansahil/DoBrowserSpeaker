@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/license-GPL%203.0-lightgrey)](LICENSE)
 [![Made with Claude](https://img.shields.io/badge/built%20with-Claude-orange)](https://claude.ai)
 
-Turn any phone, tablet, or laptop into a wireless speaker for your **Windows** or **Linux** PC. Anything that has a browser becomes an extra speaker on the same network — **no app to install on the client**.
+Turn any phone, tablet, or laptop 📱 into a wireless speaker for your Windows or Linux PC 💻. Anything that has a browser becomes an extra speaker on the same network 🌐 — no app to install on the client.
 
 ## How it works
 
@@ -16,8 +16,8 @@ Requires Python 3.10+ to build. End users do not need Python — only the built 
 The PC captures its own audio output (WASAPI loopback on Windows, PipeWire/PulseAudio monitor on Linux) and streams raw PCM over a local WebSocket. Clients open `http://<your-pc-ip>:8765` in any browser and play it back through Web Audio API.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-  <img src="docs/screenshot1.png" alt="DoBrowserSpeaker PC UI" style="height: 400px; width: auto; object-fit: contain;">
-  <img src="docs/screenshot2.png" alt="DoBrowserSpeaker Mobile UI" style="height: 400px; width: auto; object-fit: contain;">
+  <img src="docs/screenshot1.png" alt="DoBrowserSpeaker PC UI" style="height: 500px; width: auto; object-fit: contain;">
+  <img src="docs/screenshot2.png" alt="DoBrowserSpeaker Mobile UI" style="height: 500px; width: auto; object-fit: contain;">
 </div>
 
 ## Features
